@@ -1,0 +1,16 @@
+Modelos de comunicación:
+	- Bloqueante: bloquea a un proceso hasta que finaliza la solicitud
+	- No bloqueante
+
+| Emisor | ----> | Receptor |
+|________| <---- |__________|
+
+
+PAra enviar y recibir:
+int MPI_Send()
+int MPI_Recv() //Ademas devuelve el estado de la comunicación (MPI status *status)
+
+
+
+
+
