@@ -8,22 +8,23 @@
 #define COLS_B 2
 #define ROWS_B 5
 
-int** matrix_a;
-int** matrix_b;
-int** matrix_c;
-
-int rows_c, cols_c, elems_per_proc;
 
 int allocateMemory(int *** ptrToMatrix, int rows, int columns);
 
 int main(int argc, char *argv[])
 {
+	int** matrix_a;
+	int** matrix_b;
+	int** matrix_c;
+
+	int sendVector[ROWS_A * COLS_A];
+
+int rows_c, cols_c, elems_per_proc;
 	// int a[5][5]={{1,2,3,4,5},{1,2,3,4,5},{1,2,3,4,5},{1,2,3,4,5},{1,2,3,4,5}};
 	// int b[5][2]={{2,2},{2,2},{2,2},{2,2},{2,2}};
 	// int c[5][2]={{0,0},{0,0},{0,0},{0,0},{0,0}};
 
 	int i,j,k, rank, size;
-	int elems_per_proc;
 
 	MPI_Status status;
 	MPI_Init(&argc, &argv);
@@ -70,6 +71,14 @@ int main(int argc, char *argv[])
 			}
 			printf("\n");
 		}
+
+		for (int i = 0; i < ROWS_A; ++i)
+		{
+			for (int j = 0; j < COLS_A; ++j)
+			{
+				sendVector[(i* COLS_A) + j] = matrix_a[i][j];
+			}
+		}
 		// Filling matrix B
 		printf("\n");
 		for (int i = 0; i < ROWS_B; ++i)
@@ -80,7 +89,6 @@ int main(int argc, char *argv[])
 			}
 			printf("\n");
 		}
-
 		printf("%s\n", "Sending B by broadcast...");
 	} 
 
@@ -91,22 +99,12 @@ int main(int argc, char *argv[])
 		MPI_INT, 0, MPI_COMM_WORLD);
 
 	//Number of elements in row
-	int* local_row = (int)malloc(sizeof(int) * elems_per_proc);
+	int* local_row = (int* )malloc(sizeof(int) * elems_per_proc);
 
 	// for (int i = 0; i < elems_per_proc; ++i)
 	// {
 	// 	local_row[i] = matrix_a[rank][i];
 	// }
-
-	int sendVector[ROWS_A * COLS_A];
-
-	for (int i = 0; i < ROWS_A; ++i)
-	{
-		for (int j = 0; j < COLS_A; ++j)
-		{
-			sendVector[(i* COLS_A) + j] = matrix_a[i][j];
-		}
-	}
 
   // Scatter each row from the root process to all processes in MPI world!
 	
@@ -114,7 +112,8 @@ int main(int argc, char *argv[])
 		elems_per_proc, MPI_INT, 0, MPI_COMM_WORLD);
 
 	// Initializing with zeros
-	int* sub_column_result = (int* )calloc(COLS_B, sizeof(int));
+	// int* sub_column_result = (int* )calloc(COLS_B, sizeof(int));
+	int sub_column_result[2] = {0};
 
 	// Performing sub multiplication
 	for (int i = 0; i < COLS_B; i++) 
@@ -131,37 +130,26 @@ int main(int argc, char *argv[])
 		printf("\n");
 	}
 
-	// if (rank == 0) {
-	// 	int* results = NULL;
-	// 	results = (int* )malloc(sizeof(int) * ) 
-	// }
+	MPI_Gather(&sub_column_result, elems_per_proc, MPI_INT, 
+		matrix_c, elems_per_proc, MPI_INT, 0, MPI_COMM_WORLD);
 
-
-	int* results = NULL;
+	// MPI_Barrier(MPI_COMM_WORLD)
 
 	if (rank == 0) {
-		results = (int* )malloc(sizeof(int) * rows_c * cols_c);
+		//Printing matrix C
+		printf("%s\n", "Resultado: ");
+		for (int i = 0; i < rows_c; ++i)
+		{
+			for (int j = 0; j < cols_c; ++j)
+			{
+				printf("c[%d][%d] = %d\n", i, j, matrix_c[i][j]);
+			}
+		}
 	}
-
-	// MPI_Gather(&sub_column_result, elems_per_proc, MPI_INT, 
-		// results, elems_per_proc, MPI_INT, 0, MPI_COMM_WORLD);
-
-	// if (rank == 0) {
-	// 	//Printing matrix C
-	// 	printf("%s\n", "Resultado: ");
-	// 	for (int i = 0; i < rows_c; ++i)
-	// 	{
-	// 		for (int j = 0; j < cols_c; ++j)
-	// 		{
-	// 			printf("c[%d][%d] = %d\n", i, j, results[i][j]);
-	// 		}
-	// 	}
-	// }
 	if (rank == 0) {
 		free(matrix_a);
 		free(matrix_b);
 		free(matrix_c);
-		free(results);
 	} 
 	free(sub_column_result);
 	MPI_Finalize();	
