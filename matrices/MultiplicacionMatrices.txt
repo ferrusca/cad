@@ -1,0 +1,30 @@
+
+
+Multiplicación de matrices:
+
+- La sub-dimension de la matriz a en 'x' y en 'y' se envia con broadcast para matrices dinámicas
+la matriz B se envia por broadcast a todos los procesos ya que todos lo usan para multiplicar su parte.
+
+- En la matriz C utilizamos gather para obtener los resultados parciales de cada matriz y obtener la
+matriz resultante.
+
+-----------       -----------       -----------
+|         |       |         |       |         |
+|    A    |   *   |    B    |   =   |    C    |
+|         |       |         |       |         |
+-----------       -----------       -----------
+                  
+||       ||       ||       ||       ||        ||
+  =======           =======           ========
+     |                 |                 |
+Las dim. de       Se envia por      Se recibe por
+ 'x' y 'y'           Bcast.            Gather.
+ se envian 
+ por Bcast.                    
+
+
+ ||============================||
+ ||                            ||
+ ||   JUEVES 3 OCT -> EXAMEN   ||
+ ||                            ||
+ ||============================||
